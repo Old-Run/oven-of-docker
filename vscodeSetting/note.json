@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // {
+    //   "name": "Attach to Pi",
+    //   "type": "go",
+    //   "request": "attach",
+    //   "mode": "remote",
+    //   "host": "192.168.100.49",
+    //   "port": 2345,
+    //   "remotePath": "/home/pi/mcdi/main",
+    //   // 若本機路徑跟 container/PI 不同，加 substitutePath
+    //   "substitutePath": [
+    //     { "from": "${workspaceFolder}", "to": "/home/pi/mcdi" }
+    //   ],
+    // //   "preLaunchTask": "Pi: build+push+debug",
+    //   "showLog": true
+    // }
+    // .vscode/launch.json
+    {
+      "name": "Pi Attach",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "192.168.100.49",
+      "port": 2345,
+      "cwd": "${workspaceFolder}",
+      "substitutePath": [
+        { "from": "/src", "to": "${workspaceFolder}" }
+      ],
+      "showLog": true
+    }
+  ]
+}
+// .vscode/launch.json

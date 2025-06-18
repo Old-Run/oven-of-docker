@@ -1,0 +1,68 @@
+# --- builder ---
+# FROM --platform=$BUILDPLATFORM golang:1.22 AS builder
+# WORKDIR /src
+# COPY go.mod go.sum ./
+# RUN go mod download
+# COPY . .
+
+# ARG TARGETOS TARGETARCH TARGETVARIANT
+# ENV CGO_ENABLED=0 \
+#     GOOS=$TARGETOS \
+#     GOARCH=$TARGETARCH \
+#     GOARM=${TARGETVARIANT#v}
+
+# RUN --mount=type=cache,target=/root/.cache/go-build \
+#     go build -gcflags="all=-N -l" \
+#              -o /out/main ./cmd/local_fcc_test
+
+# --- artifact ---
+# FROM scratch AS artifact
+# COPY --from=builder /out/main /main
+
+# RUN --mount=type=cache,target=/root/.cache/go-build \
+#     go build -gcflags="all=-N -l" -o /out/app.pi ./cmd/fcc
+#     go build -o /out/app.pi ./cmd/fcc
+
+# RUN --mount=type=cache,target=/root/.cache/go-build \
+#     go build -gcflags="all=-N -l" \
+#              -trimpath \
+#              -o /out/main ./cmd/local_fcc_test
+
+
+# 產出裸 binary 到 ./dist，方便 scp
+# docker buildx build \
+#   --builder go-pi-builder \
+#   --platform linux/arm64 \
+#   --target builder \              # 只跑到 build 階段
+#   --output type=local,dest=./dist \
+#   -t myapp-pi .
+
+# docker buildx build --builder go-pi-builder --platform linux/arm64 --target builder --output type=local,dest=./dist,uid=$(id -u),gid=$(id -g) -t myapp-pi .
+
+# -------- builder --------
+ARG GO_VERSION=1.22
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS builder
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# 預設 linux/arm64，可被 buildx 覆蓋
+ARG TARGETOS=linux
+ARG TARGETARCH=arm64
+ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath -ldflags="-s -w" \
+             -o /out/main ./cmd/local_fcc_test
+# --- artifact ---
+FROM scratch AS artifact
+COPY --from=builder /out/main /main
+
+# -------- runtime --------
+# FROM --platform=$TARGETPLATFORM gcr.io/distroless/static:nonroot AS prod
+# COPY --from=builder /out/myapp /myapp
+# USER nonroot:nonroot
+# ENTRYPOINT ["/myapp"]

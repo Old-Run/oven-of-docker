@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Pi Attach",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "192.168.100.49",
+      "port": 2345,
+      "substitutePath": [
+        { "from": "/workspaces/FCC", "to": "/home/pi/mcdi" }
+      ],
+      "showLog": true
+    }
+  ]
+}
